@@ -1,0 +1,347 @@
+﻿@model DocumentAssistant.Models.ChatViewModel
+
+@{
+    ViewData["Title"] = "AI Lab";
+}
+
+<h1 class="mb-4">AI Lab</h1>
+
+<ul class="nav nav-tabs" id="assistantTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="chat-tab"
+                data-bs-toggle="tab" data-bs-target="#chat-pane"
+                type="button" role="tab">
+            Ask Gemma
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sample-tab"
+                data-bs-toggle="tab" data-bs-target="#sample-pane"
+                type="button" role="tab">
+            View Embedding
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="compare-tab"
+                data-bs-toggle="tab" data-bs-target="#compare-pane"
+                type="button" role="tab">
+            Compare Embeddings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rag-tab"
+                data-bs-toggle="tab" data-bs-target="#rag-pane"
+                type="button" role="tab">
+            Ask with RAG
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-4" id="assistantTabContent">
+
+    <!-- Ask Gemma tab -->
+    <div class="tab-pane fade show active" id="chat-pane" role="tabpanel"
+         aria-labelledby="chat-tab">
+
+        <h2 class="h5">Ask the language model</h2>
+
+        <form id="chatForm" asp-controller="Chat" asp-action="Ask" method="post">
+            <div class="mb-3">
+                <label asp-for="Question" class="form-label">Your question</label>
+                <textarea asp-for="Question" class="form-control" rows="4"></textarea>
+            </div>
+
+            <button id="askButton" type="submit" class="btn btn-primary">
+                <span id="askSpinner"
+                      class="spinner-border spinner-border-sm d-none"
+                      aria-hidden="true"></span>
+                <span id="askButtonText">Ask</span>
+            </button>
+        </form>
+
+        <div id="chatError" class="alert alert-danger mt-3 d-none"></div>
+
+        <div id="answerPanel" class="card mt-3 d-none">
+            <div class="card-body">
+                <h3 class="h6">Gemma's answer</h3>
+                <div id="answerText" style="white-space: pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Embedding tab -->
+    <div class="tab-pane fade" id="sample-pane" role="tabpanel"
+         aria-labelledby="sample-tab">
+
+        <h2 class="h5">Turn text into an embedding</h2>
+        <p>See a sentence converted into a vector of numbers.</p>
+
+        <button id="sampleButton" type="button" class="btn btn-primary">
+            Generate Embedding
+        </button>
+
+        <div id="sampleLoader" class="mt-3 d-none" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            Generating...
+        </div>
+
+        <div id="sampleError" class="alert alert-danger mt-3 d-none"></div>
+
+        <div id="samplePanel" class="card mt-3 d-none">
+            <div class="card-body">
+                <p><strong>Text:</strong> <span id="sampleText"></span></p>
+                <p><strong>Dimensions:</strong> <span id="sampleDimensions"></span></p>
+                <p class="mb-1"><strong>First eight numbers:</strong></p>
+                <code id="sampleNumbers" class="text-break"></code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compare Embeddings tab -->
+    <div class="tab-pane fade" id="compare-pane" role="tabpanel"
+         aria-labelledby="compare-tab">
+
+        <h2 class="h5">Find the most relevant sentence</h2>
+        <p>Compare a question with three sentences using their embeddings.</p>
+
+        <button id="compareButton" type="button" class="btn btn-primary">
+            Compare
+        </button>
+
+        <div id="compareLoader" class="mt-3 d-none" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            Comparing...
+        </div>
+
+        <div id="compareError" class="alert alert-danger mt-3 d-none"></div>
+
+        <div id="comparePanel" class="mt-3 d-none">
+            <p><strong>Question:</strong> <span id="compareQuestion"></span></p>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Sentence</th>
+                            <th>Similarity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchesBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="rag-pane" role="tabpanel"
+         aria-labelledby="rag-tab">
+
+        <h2 class="h5">Ask using sample documents</h2>
+        <p>
+            The app searches passages from your documents and gives the closest one to Gemma with your question.
+        </p>
+
+        <form id="ragForm" asp-controller="Rag" asp-action="Ask" method="post">
+            <div class="mb-3">
+                <label for="ragQuestion" class="form-label">Your question</label>
+                <textarea id="ragQuestion" name="question" class="form-control"
+                          rows="3">How many vacation days do employees get?</textarea>
+            </div>
+
+            <button id="ragButton" type="submit" class="btn btn-primary">
+                Ask with RAG
+            </button>
+        </form>
+
+        <div id="ragLoader" class="mt-3 d-none" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            Finding a passage and generating an answer...
+        </div>
+
+        <div id="ragError" class="alert alert-danger mt-3 d-none"></div>
+
+        <div id="ragResult" class="card mt-3 d-none">
+            <div class="card-body">
+                <h3 class="h6">Answer</h3>
+                <p id="ragAnswer" style="white-space: pre-wrap"></p>
+
+                <h3 class="h6">Retrieved source</h3>
+                <p class="mb-1"><strong id="ragSource"></strong></p>
+                <p id="ragPassage"></p>
+                <small class="text-muted">
+                    Similarity: <span id="ragSimilarity"></span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatForm = document.getElementById("chatForm");
+
+    chatForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const button = document.getElementById("askButton");
+        const spinner = document.getElementById("askSpinner");
+        const buttonText = document.getElementById("askButtonText");
+        const error = document.getElementById("chatError");
+        const answerPanel = document.getElementById("answerPanel");
+
+        error.classList.add("d-none");
+        answerPanel.classList.add("d-none");
+        button.disabled = true;
+        spinner.classList.remove("d-none");
+        buttonText.textContent = "Thinking...";
+
+        try {
+            const response = await fetch(chatForm.action, {
+                method: "POST",
+                body: new FormData(chatForm)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Could not get an answer.");
+            }
+
+            showAnswer(document.getElementById("answerText"), data.answer);
+            answerPanel.classList.remove("d-none");
+        } catch (e) {
+            error.textContent = e.message;
+            error.classList.remove("d-none");
+        } finally {
+            button.disabled = false;
+            spinner.classList.add("d-none");
+            buttonText.textContent = "Ask";
+        }
+    });
+
+    async function loadResult(url, buttonId, loaderId, errorId, showResult) {
+        const button = document.getElementById(buttonId);
+        const loader = document.getElementById(loaderId);
+        const error = document.getElementById(errorId);
+
+        button.disabled = true;
+        loader.classList.remove("d-none");
+        error.classList.add("d-none");
+
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Request failed (HTTP ${response.status}).`);
+            }
+
+            showResult(await response.json());
+        } catch (e) {
+            error.textContent = e.message;
+            error.classList.remove("d-none");
+        } finally {
+            button.disabled = false;
+            loader.classList.add("d-none");
+        }
+    }
+
+    document.getElementById("sampleButton").addEventListener("click", () => {
+        loadResult(
+            '@Url.Action("Sample", "Embeddings")',
+            "sampleButton",
+            "sampleLoader",
+            "sampleError",
+            (data) => {
+                document.getElementById("sampleText").textContent = data.text;
+                document.getElementById("sampleDimensions").textContent = data.dimensions;
+                document.getElementById("sampleNumbers").textContent =
+                    data.firstEightNumbers.join(", ");
+
+                document.getElementById("samplePanel").classList.remove("d-none");
+            }
+        );
+    });
+
+    document.getElementById("compareButton").addEventListener("click", () => {
+        loadResult(
+            '@Url.Action("Compare", "Embeddings")',
+            "compareButton",
+            "compareLoader",
+            "compareError",
+            (data) => {
+                document.getElementById("compareQuestion").textContent = data.question;
+
+                const body = document.getElementById("matchesBody");
+                body.replaceChildren();
+
+                data.matches.forEach((match, index) => {
+                    const row = document.createElement("tr");
+
+                    for (const value of [index + 1, match.text, match.similarity]) {
+                        const cell = document.createElement("td");
+                        cell.textContent = value;
+                        row.appendChild(cell);
+                    }
+
+                    body.appendChild(row);
+                });
+
+                document.getElementById("comparePanel").classList.remove("d-none");
+            }
+        );
+    });
+        document.getElementById("ragForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const button = document.getElementById("ragButton");
+        const loader = document.getElementById("ragLoader");
+        const error = document.getElementById("ragError");
+        const result = document.getElementById("ragResult");
+
+        button.disabled = true;
+        loader.classList.remove("d-none");
+        error.classList.add("d-none");
+        result.classList.add("d-none");
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "The RAG request failed.");
+            }
+
+            showAnswer(document.getElementById("ragAnswer"), data.answer);
+            document.getElementById("ragSource").textContent = data.source;
+            document.getElementById("ragPassage").textContent = data.passage;
+            document.getElementById("ragSimilarity").textContent = data.similarity;
+
+            result.classList.remove("d-none");
+        } catch (e) {
+            error.textContent = e.message;
+            error.classList.remove("d-none");
+        } finally {
+            button.disabled = false;
+            loader.classList.add("d-none");
+        }
+    });
+        function showAnswer(element, answer) {
+        element.replaceChildren();
+
+        for (const part of answer.split(/(\*\*[^*]+\*\*)/g)) {
+            if (part.startsWith("**") && part.endsWith("**")) {
+                const bold = document.createElement("strong");
+                bold.textContent = part.slice(2, -2);
+                element.appendChild(bold);
+            } else {
+                element.appendChild(document.createTextNode(part));
+            }
+        }
+
+        element.style.whiteSpace = "pre-wrap";
+    }
+</script>

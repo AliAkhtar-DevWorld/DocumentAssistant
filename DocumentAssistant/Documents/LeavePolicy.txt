@@ -1,0 +1,29 @@
+AI progress: Large language models are used to generate text, summarize documents, answer questions, and help write code. An application sends a prompt to a model and receives a response. The response can sound confident even when it is wrong, so applications should check important answers against reliable information.
+
+Reasoning models: Some newer AI models spend additional computation working through difficult problems before responding. This can help with tasks such as complex coding, mathematics, and planning. More reasoning can also increase response time and computing cost.
+
+Multimodal AI: A multimodal model can work with more than one kind of input, such as text, images, audio, or video. For example, a user might ask a question about a photograph or request a summary of a video. The exact media types supported depend on the model and the application using it.
+
+Embeddings: An embedding model converts text into a list of numbers called a vector. Texts with related meanings often have vectors that are close to each other. An application can compare these vectors to find passages related to a user's question.
+
+Vector search: Vector search ranks stored items by similarity to a query vector. It can find a passage about employee vacation when the question uses the phrase annual leave, even though the wording differs. A high similarity score indicates a likely relationship; it does not prove that the passage contains the answer.
+
+RAG: Retrieval-Augmented Generation first retrieves relevant information and then includes that information in the prompt sent to a language model. The model uses the retrieved information to answer the question. RAG is useful when answers should come from a company's documents instead of relying only on the model's general knowledge.
+
+Document chunking: Long documents are commonly divided into smaller passages called chunks before retrieval. Each chunk can receive its own embedding. Chunk size matters: a very large chunk may contain unrelated information, while a very small chunk may lose the context needed to answer a question.
+
+Grounded answers: An answer is grounded when its claims are supported by the retrieved source. If the source does not contain the answer, the application should say that it cannot answer from the available documents. Retrieving the closest passage alone does not guarantee that the passage answers the question.
+
+Hallucinations: An AI hallucination is an output that presents incorrect or invented information as if it were true. Supplying relevant documents, requesting source-based answers, and checking outputs can reduce this problem. No prompt can guarantee that every generated answer will be correct.
+
+AI agents: An AI agent is an application that can choose and use tools to work toward a goal. For example, an agent could search a document collection, check a calendar, and draft a meeting summary. The application decides which tools the agent may use and whether a person must approve an action.
+
+Tool calling: Tool calling allows a model to request an operation supplied by the application, such as searching a database or checking an order status. The application executes the operation and returns the result to the model. The model itself does not directly gain unrestricted access to the database.
+
+Human approval: Agents can make mistakes when choosing tools or interpreting results. For sensitive actions such as sending an email, deleting data, or approving a payment, an application can require a person to review and approve the proposed action before it happens.
+
+Local models: A local AI model runs on a user's own computer or server rather than requiring every prompt to be sent to a hosted model API. In our project, Ollama serves the local models, Gemma generates answers, and embeddinggemma creates text embeddings. Local performance depends on the available hardware and the model selected.
+
+AI in ASP.NET Core: An ASP.NET Core application can accept a question, call an embedding model, rank document passages, and send the most relevant passage to a language model. The controller then returns the answer and source information to the browser. This is the basic workflow implemented by our RAG tab.
+
+Evaluating RAG: To evaluate a RAG application, prepare questions with known answers in the documents and questions whose answers are absent. Check whether retrieval selects the right passage, whether the generated answer follows that passage, and whether the system declines unsupported questions. A similarity score by itself is not enough to measure answer quality.
